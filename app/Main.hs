@@ -1,7 +1,13 @@
 module Main where
 
-import Automata (Automata (..), Character (..), State (..), Word, runAutomata)
+import Automata (Automata (..), runAutomata)
 import Prelude hiding (Word)
+
+newtype Character = Character Char deriving (Eq, Show)
+
+type Word = [Character]
+
+newtype State = State String deriving (Eq, Show)
 
 testAlphabet :: [Char]
 testAlphabet = "ab"
@@ -25,7 +31,7 @@ testTransitions =
       (("Odd", 'b'), "Odd")
     ]
 
-testAutomata :: Automata
+testAutomata :: Automata State Character
 testAutomata = Automata testStates testStart testAccepting testTransitions
 
 charToCharacter :: [Char] -> Char -> Maybe Character
