@@ -1,38 +1,10 @@
 module Main where
 
-import Automata (Automata (..), runAutomata)
-import Prelude hiding (Word)
+import Automata (Automata (..), testInput)
 
 newtype Character = Character Char deriving (Eq, Show)
 
-type Word = [Character]
-
 newtype State = State String deriving (Eq, Show)
-
-testAlphabet :: [Char]
-testAlphabet = "ab"
-
-testStates :: [State]
-testStates = map State ["Even", "Odd"]
-
-testStart :: State
-testStart = State "Even"
-
-testAccepting :: [State]
-testAccepting = map State ["Even"]
-
-testTransitions :: [((State, Character), State)]
-testTransitions =
-  map
-    (\((p, x), q) -> ((State p, Character x), State q))
-    [ (("Even", 'a'), "Odd"),
-      (("Even", 'b'), "Even"),
-      (("Odd", 'a'), "Even"),
-      (("Odd", 'b'), "Odd")
-    ]
-
-testAutomata :: Automata State Character
-testAutomata = Automata testStates testStart testAccepting testTransitions
 
 charToCharacter :: [Char] -> Char -> Maybe Character
 charToCharacter alphabet c =
@@ -40,15 +12,30 @@ charToCharacter alphabet c =
     then Just (Character c)
     else Nothing
 
-stringToWord :: [Char] -> String -> Maybe Word
+stringToWord :: [Char] -> String -> Maybe [Character]
 stringToWord alphabet = mapM (charToCharacter alphabet)
 
-testWord :: String -> Maybe Bool
-testWord string = runAutomata testAutomata <$> stringToWord testAlphabet string
+testAlphabet :: [Char]
+testAlphabet = "ab"
+
+testDelta :: State -> Character -> State
+testDelta (State "Even") (Character 'a') = State "Odd"
+testDelta (State "Even") (Character _) = State "Even"
+testDelta (State "Odd") (Character 'a') = State "Even"
+testDelta (State "Odd") (Character _) = State "Odd"
+testDelta dump _ = dump
+
+testAutomata :: Automata State Character
+testAutomata = Automata (map State ["Even", "Odd"]) (State "Even") (map State ["Even"]) testDelta
+
+program :: String -> String
+program input = case stringToWord testAlphabet input of
+  Nothing -> "That word has characters not in the alphabet!"
+  Just word ->
+    ( if testInput testAutomata word
+        then "This word is recognised by the DFA."
+        else "This word is not recognised by the DFA."
+    )
 
 main :: IO ()
-main = do
-  input <- stringToWord testAlphabet <$> getLine
-  case input of
-    Nothing -> error "That word has characters not in the alphabet!"
-    Just word -> print $ runAutomata testAutomata word
+main = interact program

@@ -1,24 +1,17 @@
-module Automata (Automata (..), runAutomata) where
+module Automata (Automata (..), runAutomata, testInput) where
 
-import Data.Foldable (foldlM)
+import Data.Foldable (foldl')
 
 -- (Q, q., F, delta)
 data Automata a b = Automata
   { getAllStates :: ![a],
     getStartState :: !a,
     getAcceptingStates :: ![a],
-    getTransitions :: ![((a, b), a)]
+    delta :: !(a -> b -> a)
   }
 
-lookupAll :: (Eq a) => a -> [(a, b)] -> [b]
-lookupAll t = map snd . filter ((t ==) . fst)
+runAutomata :: (Eq a, Eq b, Traversable t) => Automata a b -> t b -> a
+runAutomata automata = foldl' (delta automata) (getStartState automata)
 
-deltaG :: (Eq a, Eq b) => Automata a b -> a -> b -> [a]
-deltaG automata p x = lookupAll (p, x) . getTransitions $ automata
-
-runAutomata :: (Eq a, Eq b) => Automata a b -> [b] -> Bool
-runAutomata automata word =
-  let delta = deltaG automata
-   in case foldlM delta (getStartState automata) word of
-        [] -> False
-        qs -> any (\q -> q `elem` getAcceptingStates automata) qs
+testInput :: (Eq a, Eq b, Traversable t) => Automata a b -> t b -> Bool
+testInput automata = flip elem (getAcceptingStates automata) . runAutomata automata
