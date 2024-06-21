@@ -18,12 +18,12 @@ stringToWord alphabet = mapM (charToCharacter alphabet)
 testAlphabet :: [Char]
 testAlphabet = "ab"
 
-testDelta :: State -> Character -> State
-testDelta (State "Even") (Character 'a') = State "Odd"
-testDelta (State "Even") (Character _) = State "Even"
-testDelta (State "Odd") (Character 'a') = State "Even"
-testDelta (State "Odd") (Character _) = State "Odd"
-testDelta dump _ = dump
+testDelta :: State -> Character -> [State]
+testDelta (State "Even") (Character 'a') = [State "Odd"]
+testDelta (State "Even") (Character _) = [State "Even"]
+testDelta (State "Odd") (Character 'a') = [State "Even"]
+testDelta (State "Odd") (Character _) = [State "Odd"]
+testDelta dump _ = [dump]
 
 testAutomata :: Automata State Character
 testAutomata = Automata (map State ["Even", "Odd"]) (State "Even") (map State ["Even"]) testDelta
