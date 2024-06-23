@@ -1,8 +1,13 @@
+-- |
+-- Module: Lib
+-- Description: Implementation of finite automata (NFA).
 module Automata (Automata (..), runAutomata, testInput) where
 
 import Data.Foldable (foldl')
 
--- (Q, q., F, delta)
+-- | Automata's transition function, normally denoted with a greek delta.
+-- Takes in a state and a symbol, and returns all transitions from that
+-- state via that symbol.
 data Automata a b = Automata
   { getAllStates :: ![a],
     getStartState :: !a,
@@ -10,15 +15,21 @@ data Automata a b = Automata
     delta :: !(a -> b -> [a])
   }
 
+-- | Generalised transition function that applies the transition to all input
+-- states and returns the union of output states.
 deltaT :: (Foldable t) => Automata a b -> t a -> b -> [a]
 deltaT automata states word = concatMap (flip (delta automata) word) states
 
-runAutomata :: Automata a b -> a -> [b] -> [a]
+-- | Get all end states from a start state using a foldable of symbols.
+runAutomata :: (Foldable t) => Automata a b -> a -> t b -> [a]
 runAutomata automata start word =
   let stepList = deltaT automata
    in foldl' stepList [start] word
 
-testInput :: (Eq a) => Automata a b -> [b] -> Bool
+-- | Test whether an input foldable of symbols is accepted by an automaton.
+testInput :: (Eq a, Foldable t) => Automata a b -> t b -> Bool
 testInput automata =
   let accepting = flip elem (getAcceptingStates automata)
-   in any accepting . runAutomata automata (getStartState automata)
+      start = getStartState automata
+      runFrom = runAutomata automata
+   in any accepting . runFrom start
